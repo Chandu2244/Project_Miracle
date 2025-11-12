@@ -1,0 +1,98 @@
+@import url("https://fonts.googleapis.com/css2?family=Bree+Serif&family=Caveat:wght@400;700&family=Lobster&family=Monoton&family=Open+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display+SC:ital,wght@0,400;0,700;1,700&family=Playfair+Display:ital,wght@0,400;0,700;1,700&family=Roboto:ital,wght@0,400;0,700;1,400;1,700&family=Source+Sans+Pro:ital,wght@0,400;0,700;1,700&family=Work+Sans:ital,wght@0,400;0,700;1,700&display=swap");
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0px;
+}
+
+.bg-container {
+    display: flex;
+    height: 100vh;
+}
+
+.dashboard-body {
+    display: flex;
+    flex-direction: column;
+    align-items:flex-start;
+    flex-grow: 1;
+    background-color:#f4f7fc;
+    overflow: auto;
+}
+
+.side-bar {
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+    align-items: flex-start;
+    flex-shrink: 0;
+    padding: 15px;
+    color: white;
+    background-color: #002159;
+    font-family: "Open Sans";
+}
+.sidebar-heading{
+    font-weight:bold;
+    margin-top:20px;
+    margin-bottom:20px;
+}
+
+.icon-style {
+    font-size: 16px;
+    margin-right: 10px;
+    padding-left: 10px;
+}
+
+.side-bar-each-feature {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+
+.side-bar-feature-name {
+    font-size: 16px;
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
+.dashboard-profile {
+    display: flex;
+    align-items: flex-end;
+}
+
+.profile-image {
+    width: 50px;
+    border-radius: 50px;
+    margin-right: 10px;
+}
+
+.profile-name {
+    font-size: 16px;
+}
+
+.profile-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.select-item {
+    background-color: #296eff;
+    border-radius: 5px;
+}
+
+.d-none{
+    display:none
+}
+a{
+    color:white;
+    text-decoration:none;
+}

@@ -1,0 +1,7 @@
+.vscode/
+backend/node_modules/
+backend/app.http
+node_modules/
+.env
+.DS_Store
+*.log
