@@ -47,4 +47,3 @@ eachSection.forEach(section=>{
 })
 
 
-customersSidebar.click()
