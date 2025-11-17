@@ -61,12 +61,25 @@ app.post('/quantity/',async (request,response)=>{
 })
 
 
-//GET customers API CUSTOMERS
-app.get('/customers/',async(request,response)=>{
-    const getCustomersQuery=`SELECT * from customers`
-    const responseObject=await db.all(getCustomersQuery)
+//GET customers count API 
+app.get('/customers/count/',async(request,response)=>{
+    const getCustomersCountQuery=`SELECT COUNT(*) AS total from customers`
+    const responseObject=await db.get(getCustomersCountQuery)
     response.send(responseObject)
 })
+
+
+//GET Customers API
+app.get('/customers/',async(request,response)=>{
+    const {page,limit}=request.query
+    const offset = (page - 1) * limit;
+    const getCustomersQuery = `
+    SELECT * FROM customers
+    LIMIT ${limit} OFFSET ${offset}`;
+    const customersObject = await db.all(getCustomersQuery);
+    response.send(customersObject)
+})
+
 
 
 //GET quantity API

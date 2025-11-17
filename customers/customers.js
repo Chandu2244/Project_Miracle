@@ -21,6 +21,12 @@ const confirmYes = document.getElementById("confirmYes");
 const confirmNo = document.getElementById("confirmNo");
 const deleteIconContainer=document.getElementById("deleteIconContainer");
 const selectAllCheckbox=document.getElementById("selectAll");
+const leftPage=document.getElementById("leftPage")
+const rightPage=document.getElementById("rightPage")
+const firstPage=document.getElementById("firstPage")
+const lastPage=document.getElementById("lastPage")
+const recordInfo=document.getElementById("recordInfo")
+
 
 // ======================
 // GLOBAL VARIABLES
@@ -28,6 +34,11 @@ const selectAllCheckbox=document.getElementById("selectAll");
 let formData={gender:""};
 let allCustomers=[];
 const API_URL = "http://localhost:3000/customers/";
+let currentPage=1;
+let pageLimit=4;
+let totalRecords;
+let totalPages;
+
 
 
 // ======================
@@ -135,14 +146,34 @@ async function submitCustomer(customer) {
   }
 }
 
-async function fetchCustomers() {
+async function fetchCustomers(currentPage=1,limit=pageLimit) {
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(`http://localhost:3000/customers/?page=${currentPage}&limit=${limit}`);
     allCustomers = await response.json();
     renderCustomers(allCustomers);
+    updatePaginationUI();
+    updateRecordInfo(currentPage, limit, totalRecords);
   } catch (error) {
     console.error("Error fetching customers:", error);
   }
+}
+
+function updatePaginationUI() {
+  document.querySelector(".page-info").textContent =
+    `Page ${currentPage} of ${totalPages}`;
+
+  leftPage.disabled = currentPage === 1;
+  firstPage.disabled = currentPage === 1;
+
+  rightPage.disabled = currentPage === totalPages;
+  lastPage.disabled = currentPage === totalPages;
+}
+
+function updateRecordInfo(currentPage, limit, totalRecords) {
+  const start = (currentPage - 1) * limit + 1;
+  const end = Math.min(currentPage * limit, totalRecords);
+  recordInfo.textContent =
+    `${start} - ${end} of ${totalRecords}`;
 }
 
 
@@ -182,7 +213,6 @@ async function updateCustomer(id,updatedCustomer){
 }
 
 
-        
 
 
 
@@ -193,8 +223,10 @@ async function updateCustomer(id,updatedCustomer){
 
 function renderCustomers(customersList) {
   customersContainer.innerHTML = "";
+  const start = (currentPage - 1) * pageLimit + 1;
   customersList.forEach((customer, index) => {
-    customersContainer.appendChild(createCustomerRow(customer, index));
+    const serialNumber = start + index - 1;
+    customersContainer.appendChild(createCustomerRow(customer, serialNumber));
   });
 }
 
@@ -349,5 +381,41 @@ function createCustomerRow(customer, index) {
 // ======================
 // INITIAL LOAD
 // ======================
-fetchCustomers();
+async function initialCustomers() {
+  // Fetch count ONLY once
+  const countCustomers = await fetch("http://localhost:3000/customers/count/");
+  const { total } = await countCustomers.json();
+  totalRecords=total
+  totalPages=Math.ceil(totalRecords/pageLimit)
+  totalPages = Math.ceil(total /pageLimit);
+  fetchCustomers(); // Load first page
+}
+
+initialCustomers()
+        
+
+
+rightPage.addEventListener("click", () => {
+  currentPage++;
+  fetchCustomers(currentPage);
+});
+
+leftPage.addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage--;
+    fetchCustomers(currentPage);
+  }
+});
+
+
+firstPage.addEventListener("click", () => {
+    currentPage=1;
+    fetchCustomers(currentPage);
+});
+
+
+lastPage.addEventListener("click", () => {
+    currentPage=totalPages;
+    fetchCustomers(totalPages);
+});
 
