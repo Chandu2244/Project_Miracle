@@ -5,8 +5,22 @@ const submitBtn=document.getElementById("submitBtn");
 let submissionMsg=document.getElementById("submissionMsg");
 let submissionErrMsg=document.getElementById("submissionErrMsg");
 let dateErrMsg=document.getElementById("dateErrMsg");
+let group1=document.getElementById("group1");
+let selectCustomersBody=document.getElementById("selectCustomersBody");
+const modal = document.getElementById("selectCustomersModal");
+const leftPage = document.getElementById("leftPage");
+const rightPage = document.getElementById("rightPage");
+const firstPage = document.getElementById("firstPage");
+const lastPage = document.getElementById("lastPage");
+const recordInfo = document.getElementById("recordInfo");
 let quantityValues=[];
 let userSelectedDate=null;
+
+let currentPage = 1;
+let pageLimit = 30;
+let totalRecords = 0;
+let totalPages = 1;
+
 
 
 
@@ -23,10 +37,27 @@ async function fetchCustomers() {
   }
 }
 
+async function fetchSelectCustomers() {
+  try {
+    const response = await fetch(API_URL);
+    allCustomers = await response.json();
+    renderSelectCustomers(allCustomers);
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+  }
+}
+
 function renderCustomers(customersList) {
   quantityContainer.innerHTML = "";
   customersList.forEach((customer, index) => {
     quantityContainer.appendChild(createCustomerRow(customer, index));
+  });
+}
+
+function renderSelectCustomers(customersList) {
+  selectCustomersBody.innerHTML = "";
+  customersList.forEach((customer, index) => {
+    selectCustomersBody.appendChild(createSelectCustomerRow(customer, index));
   });
 }
 
@@ -69,6 +100,38 @@ function createCustomerRow(customer, index) {
     event.preventDefault(); // block all others
     }
   })
+
+  return row;
+}
+
+
+function createSelectCustomerRow(customer, index) {
+  const row = document.createElement("tr");
+
+  row.setAttribute("data-id",customer.id)
+
+  checkboxContainer=document.createElement('td')
+  const checkbox=document.createElement('input')
+  checkboxContainer.appendChild(checkbox)
+  checkbox.type="checkbox"
+  checkbox.id=customer.id
+  row.appendChild(checkboxContainer)
+
+  // Serial Number
+  const serialCell = document.createElement("td");
+  serialCell.textContent = index + 1;
+  row.appendChild(serialCell);
+
+  // Customer Details
+  const fields = ["name","address"];
+  fields.forEach((key) => {
+    const cell = document.createElement("td");
+    cell.textContent = customer[key] || "";
+    row.appendChild(cell);
+  });
+
+  let cells=row.querySelector('td')
+  let checkboxCell=cells[0]
 
   return row;
 }
@@ -143,8 +206,44 @@ submitBtn.addEventListener("click",async(event)=>{
 
 
 
+group1.addEventListener("click", () => {
+    modal.style.display = "flex";   // show modal
+    fetchSelectCustomers();
+});
+
+// Close modal when clicking outside the box
+modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.style.display = "none";
+});
+
+
+
 
 // ======================
 // INITIAL LOAD
 // ======================
 fetchCustomers();
+
+
+
+// ======================
+// Pagination
+// ======================
+function updatePaginationUI() {
+  document.querySelector(".page-info").textContent = `Page ${currentPage} of ${totalPages}`;
+  leftPage.disabled = firstPage.disabled = currentPage === 1;
+  rightPage.disabled = lastPage.disabled = currentPage === totalPages;
+}
+
+function updateRecordInfo() {
+  const start = (currentPage - 1) * pageLimit + 1;
+  const end = Math.min(currentPage * pageLimit, totalRecords);
+  recordInfo.textContent = `${start} - ${end} of ${totalRecords}`;
+}
+
+rightPage.onclick = () => currentPage < totalPages && loadCustomers(currentPage + 1);
+leftPage.onclick = () => currentPage > 1 && loadCustomers(currentPage - 1);
+firstPage.onclick = () => loadCustomers(1);
+lastPage.onclick = () => loadCustomers(totalPages);
+
+

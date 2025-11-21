@@ -8,6 +8,7 @@ app.use(cors())
 const {open}=require('sqlite')
 const sqlite3=require('sqlite3')
 const path=require('path')
+const { off } = require('process')
 const dbPath=path.join(__dirname,'customersDB.db')
 
 let db=null
@@ -45,6 +46,22 @@ app.post('/customers/',async(request,response)=>{
     response.send("Customer Added")
 })
 
+//Mulitple Customers Add
+// app.post('/customers/',async(request,response)=>{
+//     let arrayOfCustomers=request.body
+//     for (let eachCustomer of arrayOfCustomers){
+//         const {firstName,lastName,contact,address,gender}=eachCustomer
+//         const addCustomerQuery=`INSERT INTO customers
+//         (name,contact,address,gender) VALUES
+//         ('${firstName} ${lastName}',
+//         '${contact}',
+//         '${address}',
+//         '${gender}')`
+//         await db.run(addCustomerQuery)
+//     }
+//     response.send("Customers Added!")
+// })
+
 //ADD Quantity API
 app.post('/quantity/',async (request,response)=>{
     let arrayOfQuantity=request.body
@@ -71,8 +88,8 @@ app.get('/customers/count/',async(request,response)=>{
 
 //GET Customers API
 app.get('/customers/',async(request,response)=>{
-    const {page,limit}=request.query
-    const offset = (page - 1) * limit;
+    const {page=1,limit=4}=request.query
+    const offset = (Number(page) - 1) * Number(limit);
     const getCustomersQuery = `
     SELECT * FROM customers
     LIMIT ${limit} OFFSET ${offset}`;
@@ -128,4 +145,30 @@ app.post("/customers/delete/", async (req, res) => {
   }
 });
 
+
+app.put("/milk-entries", async (req, res) => {
+  const entries = req.body; // array of 30 entries
+
+  const query = `
+    INSERT INTO milk_entries (customer_id, date, quantity)
+    VALUES (?, ?, ?)
+    ON CONFLICT(customer_id, date) DO UPDATE SET
+      quantity = excluded.quantity;
+  `;
+
+  try {
+    const insert = await db.prepare(query);
+
+    for (let entry of entries) {
+      await insert.run(entry.customer_id, entry.date, entry.quantity);
+    }
+
+    await insert.finalize();
+    res.send("Milk entries saved successfully");
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error saving entries");
+  }
+});
 

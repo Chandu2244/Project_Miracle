@@ -1,421 +1,263 @@
 // ======================
 // DOM ELEMENTS
 // ======================
-let firstName = document.getElementById("firstName");
-let firstNameErrMsg = document.getElementById("firstNameErrMsg");
-let lastName = document.getElementById("lastName");
-let lastNameErrMsg = document.getElementById("lastNameErrMsg");
-let address=document.getElementById("address");
-let addressErrMsg = document.getElementById("addressErrMsg");
-let contact = document.getElementById("contact");
-let contactErrMsg = document.getElementById("contactErrMsg");
-let genderMale = document.getElementById("genderMale");
-let genderFemale = document.getElementById("genderFemale");
-let serverResponse=document.getElementById("serverResponse");
-let addCustomerForm=document.getElementById("addCustomerForm");
-let fieldsErrorMsg=document.getElementById("fieldsErrorMsg");
-let submitBtn = document.getElementById("submitBtn");
-let customersContainer=document.getElementById("customersContainer");
-const modal = document.getElementById("confirmModal");
-const confirmYes = document.getElementById("confirmYes");
-const confirmNo = document.getElementById("confirmNo");
-const deleteIconContainer=document.getElementById("deleteIconContainer");
-const selectAllCheckbox=document.getElementById("selectAll");
-const leftPage=document.getElementById("leftPage")
-const rightPage=document.getElementById("rightPage")
-const firstPage=document.getElementById("firstPage")
-const lastPage=document.getElementById("lastPage")
-const recordInfo=document.getElementById("recordInfo")
+const firstName = document.getElementById("firstName");
+const firstNameErrMsg = document.getElementById("firstNameErrMsg");
+const lastName = document.getElementById("lastName");
+const lastNameErrMsg = document.getElementById("lastNameErrMsg");
+const address = document.getElementById("address");
+const addressErrMsg = document.getElementById("addressErrMsg");
+const contact = document.getElementById("contact");
+const contactErrMsg = document.getElementById("contactErrMsg");
+const genderMale = document.getElementById("genderMale");
+const genderFemale = document.getElementById("genderFemale");
+const serverResponse = document.getElementById("serverResponse");
+const addCustomerForm = document.getElementById("addCustomerForm");
+const fieldsErrorMsg = document.getElementById("fieldsErrorMsg");
+const customersContainer = document.getElementById("customersContainer");
+const deleteIconContainer = document.getElementById("deleteIconContainer");
+const selectAllCheckbox = document.getElementById("selectAll");
+const leftPage = document.getElementById("leftPage");
+const rightPage = document.getElementById("rightPage");
+const firstPage = document.getElementById("firstPage");
+const lastPage = document.getElementById("lastPage");
+const recordInfo = document.getElementById("recordInfo");
 
 
 // ======================
 // GLOBAL VARIABLES
 // ======================
-let formData={gender:""};
-let allCustomers=[];
 const API_URL = "http://localhost:3000/customers/";
-let currentPage=1;
-let pageLimit=4;
-let totalRecords;
-let totalPages;
-
+let formData = { gender: "" };
+let allCustomers = [];
+let currentPage = 1;
+let pageLimit = 30;
+let totalRecords = 0;
+let totalPages = 1;
 
 
 // ======================
-// FIELD VALIDATION
+// REUSABLE API HANDLER
 // ======================
-const fields =[
-    {input:firstName,error:firstNameErrMsg},
-    {input:lastName,error:lastNameErrMsg},
-    {input:address,error:addressErrMsg},
-    {input:contact,error:contactErrMsg}
-]
+async function api(url, method = "GET", body = null) {
+  const options = { method, headers: { "Content-Type": "application/json" } };
+  if (body) options.body = JSON.stringify(body);
 
-function validateRequiredFields(inputElement, errorElement) {
-  errorElement.textContent = inputElement.value.trim() === "" ? "Required*" : "";
+  const response = await fetch(url, options);
+  return response.json().catch(() => response.text());
 }
 
-fields.forEach(field=>{
-    field.input.addEventListener("blur",()=>{
-        validateRequiredFields(field.input,field.error)
-    });
+
+// ======================
+// VALIDATION
+// ======================
+const fields = [
+  { input: firstName, error: firstNameErrMsg },
+  { input: lastName, error: lastNameErrMsg },
+  { input: address, error: addressErrMsg },
+  { input: contact, error: contactErrMsg },
+];
+
+function validateRequired(input, errorEl) {
+  errorEl.textContent = input.value.trim() ? "" : "Required*";
+}
+
+fields.forEach(({ input, error }) => {
+  input.addEventListener("blur", () => validateRequired(input, error));
 });
 
 contact.addEventListener("blur", () => {
-  if (contact.value && contact.value.length !== 10) {
-    contactErrMsg.textContent = "*Enter 10 digits";
-  } else {
-    contactErrMsg.textContent = "";
+  contactErrMsg.textContent =
+    /^\d{10}$/.test(contact.value) ? "" : "*Enter 10 digits";
+});
+
+contact.addEventListener("keydown", (e) => {
+  if (!/[0-9]/.test(e.key) && !["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)) {
+    e.preventDefault();
   }
 });
 
-contact.addEventListener('keydown',contactValidation);
-
-
-function contactValidation(event){
-  // Allow only digits 0–9, Backspace, Delete, Arrow keys, and Tab
-  if (
-    (event.key >= '0' && event.key <= '9') || 
-    event.key === 'Backspace' ||
-    event.key === 'Delete' ||
-    event.key === 'ArrowLeft' ||
-    event.key === 'ArrowRight' ||
-    event.key === 'Tab'
-  ) {
-    return; // allow these keys
-  } else {
-    event.preventDefault(); // block all others
-  }
-}
-
-// Gender selection
-[genderMale, genderFemale].forEach((input) => {
-  input.addEventListener("change", (e) => (formData.gender = e.target.value));
-});
+[genderMale, genderFemale].forEach((g) =>
+  g.addEventListener("change", (e) => (formData.gender = e.target.value))
+);
 
 
 // ======================
 // FORM SUBMISSION
 // ======================
+addCustomerForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-addCustomerForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (validateForm()) {
-    collectFormData();
-    await submitCustomer({ ...formData });
-    addCustomerForm.reset();
-    formData = { gender: "" };
-  } else {
+  const allFilled = fields.every((f) => f.input.value.trim() !== "");
+  const validContact = /^\d{10}$/.test(contact.value);
+  const genderSelected = formData.gender !== "";
+
+  if (!allFilled || !validContact || !genderSelected) {
     fieldsErrorMsg.textContent = "Please fill required details!";
+    return;
+  }
+
+  fields.forEach(({ input }) => (formData[input.id] = input.value.trim()));
+
+  const message = await api(API_URL, "POST", formData);
+  serverResponse.textContent = message;
+
+  addCustomerForm.reset();
+  formData = { gender: "" };
+
+  await loadCustomers();
+});
+
+
+// ======================
+// CRUD OPERATIONS
+// ======================
+async function loadCustomers(page = currentPage) {
+  currentPage = page;
+  const count = await api(`${API_URL}count/`);
+  totalRecords = count.total;
+  totalPages = Math.ceil(totalRecords / pageLimit);
+
+  allCustomers = await api(`${API_URL}?page=${currentPage}&limit=${pageLimit}`);
+  renderTable();
+  updatePaginationUI();
+  updateRecordInfo();
+}
+
+async function deleteCustomers(ids) {
+  await api(`${API_URL}delete/`, "POST", { ids });
+  await loadCustomers();
+}
+
+async function updateCustomer(id, updated) {
+  await api(`${API_URL}${id}`, "PUT", updated);
+  await loadCustomers();
+}
+
+
+// ======================
+// RENDER TABLE
+// ======================
+function renderTable() {
+  customersContainer.innerHTML = "";
+  const start = (currentPage - 1) * pageLimit;
+
+  allCustomers.forEach((c, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input type="checkbox" class="rowCheck" data-id="${c.id}" /></td>
+      <td>${start + i + 1}</td>
+      <td>${c.name}</td>
+      <td>${c.contact}</td>
+      <td>${c.address}</td>
+      <td>${c.gender}</td>
+      <td><i class="fa-regular fa-pen-to-square edit-btn"></i></td>
+    `;
+    customersContainer.appendChild(tr);
+
+    tr.querySelector(".rowCheck").addEventListener("change", toggleDeleteIcon);
+    tr.querySelector(".edit-btn").addEventListener("click", () => enableEdit(tr, c));
+  });
+}
+
+
+// ======================
+// EDIT ROW
+// ======================
+function enableEdit(row, customer) {
+  const cells = row.querySelectorAll("td");
+  const id = customer.id;
+
+  cells[2].innerHTML = `<input value="${customer.name}">`;
+  cells[3].innerHTML = `<input value="${customer.contact}">`;
+  cells[4].innerHTML = `<input value="${customer.address}">`;
+  cells[5].innerHTML = `
+    <select>
+      <option value="M" ${customer.gender === "M" ? "selected" : ""}>M</option>
+      <option value="F" ${customer.gender === "F" ? "selected" : ""}>F</option>
+    </select>
+  `;
+
+  const saveIcon = document.createElement("i");
+  saveIcon.classList.add("fa-solid", "fa-check", "save-icon");
+  cells[6].innerHTML = "";
+  cells[6].appendChild(saveIcon);
+
+  saveIcon.addEventListener("click", async () => {
+    const updated = {
+      name: cells[2].querySelector("input").value.trim(),
+      contact: cells[3].querySelector("input").value.trim(),
+      address: cells[4].querySelector("input").value.trim(),
+      gender: cells[5].querySelector("select").value
+    };
+    
+
+    if (!updated.name || !updated.address || !/^\d{10}$/.test(updated.contact)) {
+      alert("Please correct the data!");
+      return;
+    }
+    cells[2].textContent = updated.name;
+    cells[3].textContent = updated.contact;
+    cells[4].textContent = updated.address;
+    cells[5].textContent = updated.gender;
+    cells[6].innerHTML = `<i class="fa-regular fa-pen-to-square edit-btn"></i>`;
+
+    // Re-enable edit button
+    updated.id = customer.id;
+    cells[6].querySelector(".edit-btn").addEventListener("click", () => enableEdit(row, updated));
+    await updateCustomer(id, updated);
+    
+  });
+}
+
+
+// ======================
+// BULK DELETE
+// ======================
+const deleteIcon = document.createElement("i");
+deleteIcon.classList.add("fa-solid", "fa-trash", "delete-icon", "d-none");
+deleteIconContainer.appendChild(deleteIcon);
+
+selectAllCheckbox.addEventListener("change", () => {
+  document.querySelectorAll(".rowCheck").forEach(cb => cb.checked = selectAllCheckbox.checked);
+  toggleDeleteIcon();
+});
+
+deleteIcon.addEventListener("click", async () => {
+  const ids = [...document.querySelectorAll(".rowCheck:checked")].map(cb => cb.dataset.id);
+  if (ids.length && confirm("Delete selected customers?")) {
+    await deleteCustomers(ids);
   }
 });
 
-function validateForm() {
-  const allFilled = fields.every(f => f.input.value.trim() !== "");
-  const validContact = contact.value.length === 10;
-  const genderSelected = formData.gender !== "";
-  fieldsErrorMsg.textContent = "";
-  return allFilled && validContact && genderSelected;
-}
-
-function collectFormData() {
-  fields.forEach(({ input }) => {
-    formData[input.id] = input.value.trim();
-  });
-}
-
-// ======================
-// DATABASE OPERATIONS
-// ======================
-
-async function submitCustomer(customer) {
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" ,
-        "Accept":"application/json"
-      },
-      body: JSON.stringify(customer)
-    });
-    const message = await response.text();
-    serverResponse.textContent = message;
-    await fetchCustomers()// refresh table after successful POST
-  } catch (error) {
-    console.log("Error adding customer:", error);
-    
-  }
-}
-
-async function fetchCustomers(currentPage=1,limit=pageLimit) {
-  try {
-    const response = await fetch(`http://localhost:3000/customers/?page=${currentPage}&limit=${limit}`);
-    allCustomers = await response.json();
-    renderCustomers(allCustomers);
-    updatePaginationUI();
-    updateRecordInfo(currentPage, limit, totalRecords);
-  } catch (error) {
-    console.error("Error fetching customers:", error);
-  }
-}
-
-function updatePaginationUI() {
-  document.querySelector(".page-info").textContent =
-    `Page ${currentPage} of ${totalPages}`;
-
-  leftPage.disabled = currentPage === 1;
-  firstPage.disabled = currentPage === 1;
-
-  rightPage.disabled = currentPage === totalPages;
-  lastPage.disabled = currentPage === totalPages;
-}
-
-function updateRecordInfo(currentPage, limit, totalRecords) {
-  const start = (currentPage - 1) * limit + 1;
-  const end = Math.min(currentPage * limit, totalRecords);
-  recordInfo.textContent =
-    `${start} - ${end} of ${totalRecords}`;
-}
-
-
-async function deleteCustomers(ids) {
-  try{
-    const response = await fetch(`http://localhost:3000/customers/delete/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" ,
-        "Accept":"application/json"
-      },
-    body:JSON.stringify({ids})
-    });
-    alert(await response.text());
-    await fetchCustomers(); // refresh table
-  }catch(error){
-    console.log("Error deleting customer:", error)
-    alert('Error occured deleteing customer!')
-  }
-}
-
-
-async function updateCustomer(id,updatedCustomer){
-  try{
-    const response = await fetch(`http://localhost:3000/customers/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept":"application/json"
-    },
-    body: JSON.stringify(updatedCustomer),
-    });
-    await fetchCustomers();
-  }catch(error){
-    console.log("Error Updating Cutomer:",error)
-    alert('Error occured while updating customer')
-  }
-}
-
-
-
-
-
-
-// ======================
-// RENDERING FUNCTIONS
-// ======================
-
-function renderCustomers(customersList) {
-  customersContainer.innerHTML = "";
-  const start = (currentPage - 1) * pageLimit + 1;
-  customersList.forEach((customer, index) => {
-    const serialNumber = start + index - 1;
-    customersContainer.appendChild(createCustomerRow(customer, serialNumber));
-  });
-}
-
-
-//DELETE ICON
-
-const deleteIcon=document.createElement('i');
-deleteIcon.classList.add("fa-solid","fa-trash","delete-icon","d-none");
-deleteIconContainer.appendChild(deleteIcon);
-selectAllCheckbox.addEventListener("change",()=>{
-  const checkBoxes=customersContainer.querySelectorAll("input[type='checkbox']")
-  if (selectAllCheckbox.checked){
-  for (eachBox of checkBoxes){
-    eachBox.checked=true;
-  }
-  }else{
-    for (eachBox of checkBoxes){
-    eachBox.checked=false;
-  }}
-  updateDeleteIconVisibility()
-})
-
-
-
-function updateDeleteIconVisibility() {
-  const anyChecked = document.querySelectorAll("input[type='checkbox']:checked").length > 0;
+function toggleDeleteIcon() {
+  const anyChecked = document.querySelectorAll(".rowCheck:checked").length > 0;
   deleteIcon.classList.toggle("d-none", !anyChecked);
 }
 
-deleteIcon.addEventListener("click",async ()=>{
-  const deleteIds=[]
-  const checkedRows = document.querySelectorAll("input[type='checkbox']:checked");
-  for (checked of checkedRows){
-    deleteIds.push(checked.id)
-  }
-  await deleteCustomers(deleteIds)
-})
 
-
-function createCustomerRow(customer, index) {
-  const row = document.createElement("tr");
-
-  row.setAttribute("data-id",customer.id)
-
-  const selectedCell=document.createElement('td');
-  const checkBox=document.createElement('input')
-  checkBox.type="checkbox"
-  checkBox.id=customer.id
-  selectedCell.appendChild(checkBox)
-  row.appendChild(selectedCell)
-
-  checkBox.addEventListener("change", updateDeleteIconVisibility);
-
-  // Serial Number
-  const serialCell = document.createElement("td");
-  serialCell.textContent = index + 1;
-  row.appendChild(serialCell);
-
-  // Customer Details
-  const fields = ["name","contact", "address", "gender"];
-  fields.forEach((key) => {
-    const cell = document.createElement("td");
-    cell.textContent = customer[key] || "";
-    row.appendChild(cell);
-  });
-
-  // Edit Icon
-  const editCell = document.createElement("td");
-  const editIcon = document.createElement("i");
-  editIcon.classList.add("fa-regular", "fa-pen-to-square");
-  editCell.appendChild(editIcon);
-  row.appendChild(editCell);
-
-  editIcon.addEventListener('click',()=>{
-    editCell.textContent=""
-    const saveIcon=document.createElement('i');
-    saveIcon.classList.add("fa-solid","fa-check","save-icon")
-
-    saveIcon.addEventListener('click',async()=>{
-      let id=customer.id
-
-      const inputs = row.querySelectorAll("input");
-      const name = inputs[1].value;
-      const contact = inputs[2].value;
-      const address = inputs[3].value;
-      const gender=row.querySelector("select").value
-      
-      const contactElement=inputs[2]
-
-      contactElement.addEventListener('keydown',contactValidation)
-      const fields=[name,contact,address]
-      function validateUpdates() {
-        const allFilled = fields.every(f => f.trim() !== "");
-        const validContact = contact.length === 10;
-        return allFilled && validContact;
-      }
-
-      if (validateUpdates()){
-        const updatedCustomer = {
-          name,
-          contact,
-          address,
-          gender
-        };
-        updateCustomer(id,updatedCustomer)
-      }else{
-        alert("Please correct the data!")
-      }
-
-    })
-
-    
-    editCell.appendChild(saveIcon)
-    const cells = row.querySelectorAll('td');
-
-    const editableIndexes = [2, 3, 4, ]; //editable columns
-
-    editableIndexes.forEach((index) => {
-        const cell = cells[index];                  
-        const input = document.createElement('input'); 
-        input.value = cell.textContent;             
-        cell.textContent = '';                      
-        cell.appendChild(input);  
-    });
-
-    const genderCell=cells[5]
-    genderCell.textContent='';
-
-    const genderSelect = document.createElement("select");
-    genderSelect.id = "gender";
-
-    const maleOption = document.createElement("option");
-    maleOption.value = "M";
-    maleOption.textContent = "M";
-    genderSelect.appendChild(maleOption);
-    maleOption.selected = true;
-
-    const femaleOption = document.createElement("option");
-    femaleOption.value = "F";
-    femaleOption.textContent = "F";
-    genderSelect.appendChild(femaleOption);
-
-    genderCell.appendChild(genderSelect)
-    
-
-    
-  })
-
-  return row;
+// ======================
+// PAGINATION
+// ======================
+function updatePaginationUI() {
+  document.querySelector(".page-info").textContent = `Page ${currentPage} of ${totalPages}`;
+  leftPage.disabled = firstPage.disabled = currentPage === 1;
+  rightPage.disabled = lastPage.disabled = currentPage === totalPages;
 }
+
+function updateRecordInfo() {
+  const start = (currentPage - 1) * pageLimit + 1;
+  const end = Math.min(currentPage * pageLimit, totalRecords);
+  recordInfo.textContent = `${start} - ${end} of ${totalRecords}`;
+}
+
+rightPage.onclick = () => currentPage < totalPages && loadCustomers(currentPage + 1);
+leftPage.onclick = () => currentPage > 1 && loadCustomers(currentPage - 1);
+firstPage.onclick = () => loadCustomers(1);
+lastPage.onclick = () => loadCustomers(totalPages);
+
 
 // ======================
 // INITIAL LOAD
 // ======================
-async function initialCustomers() {
-  // Fetch count ONLY once
-  const countCustomers = await fetch("http://localhost:3000/customers/count/");
-  const { total } = await countCustomers.json();
-  totalRecords=total
-  totalPages=Math.ceil(totalRecords/pageLimit)
-  totalPages = Math.ceil(total /pageLimit);
-  fetchCustomers(); // Load first page
-}
-
-initialCustomers()
-        
-
-
-rightPage.addEventListener("click", () => {
-  currentPage++;
-  fetchCustomers(currentPage);
-});
-
-leftPage.addEventListener("click", () => {
-  if (currentPage > 1) {
-    currentPage--;
-    fetchCustomers(currentPage);
-  }
-});
-
-
-firstPage.addEventListener("click", () => {
-    currentPage=1;
-    fetchCustomers(currentPage);
-});
-
-
-lastPage.addEventListener("click", () => {
-    currentPage=totalPages;
-    fetchCustomers(totalPages);
-});
-
+loadCustomers();
