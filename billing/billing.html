@@ -1,1 +1,41 @@
-<p>Billing</p>
+<div class="whole-container">
+    <div class="billing-container">
+
+        <div class="row">
+            <label>Cost per litre:</label>
+            <input type="number" id="costPerLitre" name="costPerLitre" min="0">
+        </div>
+
+        <div class="row mt-4">
+            <label for="monthSelect">Select Month:</label>
+            <input type="month" id="monthSelect" name="monthSelect">
+        </div>
+
+        <div class="row mt-4">
+            <label for="customerSelect">Select Customer:</label>
+            <select id="customerSelect">
+                <option value="">-- Select Customer --</option>
+            </select>
+        </div>
+
+        <button id="generateBillBtn" class="mt-4 btn btn-success bill-btn">
+            Get Bill
+        </button>
+
+    </div>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>S.No</th>
+            <th>Date</th>
+            <th>Quantity (L)</th>
+            <th>Price (₹)</th>
+        </tr>
+    </thead>
+    <tbody id="billTableBody"></tbody>
+</table>
+
+<div id="billTotals" class="totalBill"></div>
+

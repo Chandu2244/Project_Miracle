@@ -13,6 +13,7 @@ const rightPage = document.getElementById("rightPage");
 const firstPage = document.getElementById("firstPage");
 const lastPage = document.getElementById("lastPage");
 const recordInfo = document.getElementById("recordInfo");
+const copyPrevCheckbox = document.getElementById("copyPreviousDay");
 
 
 // ======================
@@ -228,6 +229,65 @@ async function autoFillQuantities(date) {
 servingDate.addEventListener("change", () => {
   autoFillQuantities(servingDate.value);
 });
+
+
+async function autoFillPreviousDay() {
+  const today = servingDate.value;
+  if (!today) {
+    alert("Please select a date first.");
+    return;
+  }
+
+  // Get yesterday's date
+  const dateObj = new Date(today);
+  dateObj.setDate(dateObj.getDate() - 1);
+
+  const prevDate = dateObj.toISOString().split("T")[0];
+
+  // Fetch yesterday’s saved quantities
+  const savedData = await fetchQuantities(prevDate);
+
+  const quantityMap = {};
+  savedData.forEach(item => {
+    quantityMap[item.customer_id] = item.quantity;
+  });
+
+  // Fill inputs
+  const rows = document.querySelectorAll("#quantityContainer tr");
+
+  rows.forEach(row => {
+    const customerId = Number(row.dataset.id);
+    const input = row.querySelector("input");
+
+    if (quantityMap[customerId] !== undefined) {
+      input.value = quantityMap[customerId];
+    } else {
+      input.value = "";
+    }
+  });
+}
+
+
+copyPrevCheckbox.addEventListener("change", function () {
+  if (this.checked) {
+    // Fill from previous day
+    autoFillPreviousDay();
+  } else {
+    // Clear all quantity inputs
+    clearAllQuantities();
+  }
+});
+
+function clearAllQuantities() {
+  const rows = document.querySelectorAll("#quantityContainer tr");
+
+  rows.forEach(row => {
+    const input = row.querySelector("input");
+    if (input) input.value = "";
+  });
+}
+
+
 
 
 // ======================

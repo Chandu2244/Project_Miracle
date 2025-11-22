@@ -1,0 +1,58 @@
+.whole-container {
+    display: flex;
+    justify-content:center;
+    align-items: center;        /* full screen height */
+    width: 100%;
+    padding-top:10px;
+    padding-bottom:10px;
+}
+
+.billing-container {
+    width: 450px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Row = label (left) + input (right) */
+.billing-container .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+/* Label on left */
+.billing-container label {
+    font-weight: bold;
+    width: 40%;  /* left label space */
+}
+
+/* Input / select on right */
+.billing-container input,
+.billing-container select {
+    width: 55%;  /* right input space */
+    padding: 6px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.billing-container button {
+    display: block;
+    margin: 20px auto 0 auto; /* top auto bottom auto */
+    width: 150px;             /* optional */
+}
+
+.table th,
+.table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.totalBill{
+    margin-top: 20px; 
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+}

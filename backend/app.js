@@ -195,4 +195,40 @@ app.get("/quantity/", async (req, res) => {
   }
 });
 
+//GET customer bill API
+app.get("/billing/", async (req, res) => {
+  const { customer_id, month, cost } = req.query;
+
+  if (!customer_id || !month || !cost) {
+    return res.status(400).send("Missing inputs");
+  }
+
+  const [year, mon] = month.split("-");
+
+  const query = `
+    SELECT date, quantity
+    FROM quantity
+    WHERE customer_id = ?
+      AND strftime('%Y', date) = ?
+      AND strftime('%m', date) = ?
+    ORDER BY date;
+  `;
+
+  try {
+    const rows = await db.all(query, [customer_id, year, mon]);
+
+    const result = rows.map(row => ({
+      date: row.date,
+      quantity: row.quantity,
+      price: row.quantity * Number(cost)
+    }));
+
+    res.json(result);
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Error generating bill");
+  }
+});
+
 

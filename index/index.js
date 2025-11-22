@@ -47,6 +47,6 @@ eachSection.forEach(section=>{
 })
 
 
-quantitySidebar.click();
+billingSidebar.click();
 
 
