@@ -86,9 +86,10 @@ app.get('/customers/count/',async(request,response)=>{
 })
 
 
+
 //GET Customers API
 app.get('/customers/',async(request,response)=>{
-    const {page=1,limit=4}=request.query
+    const {page=1,limit=30}=request.query
     const offset = (Number(page) - 1) * Number(limit);
     const getCustomersQuery = `
     SELECT * FROM customers
@@ -99,12 +100,12 @@ app.get('/customers/',async(request,response)=>{
 
 
 
-//GET quantity API
-app.get('/quantity/',async(request,response)=>{
-    const getCustomersQuery=`SELECT id,name,address from customers`
-    const responseObject=await db.all(getCustomersQuery)
-    response.send(responseObject)
-})
+// //GET quantity API - wrong
+// app.get('/quantity/',async(request,response)=>{
+//     const getCustomersQuery=`SELECT id,name,address from customers`
+//     const responseObject=await db.all(getCustomersQuery)
+//     response.send(responseObject)
+// })
 
 
 //UPDATE Customers
@@ -146,24 +147,24 @@ app.post("/customers/delete/", async (req, res) => {
 });
 
 
-app.put("/milk-entries", async (req, res) => {
+app.put("/quantity/", async (req, res) => {
   const entries = req.body; // array of 30 entries
 
-  const query = `
-    INSERT INTO milk_entries (customer_id, date, quantity)
+  const upsertQuery = `
+    INSERT INTO quantity (customer_id, date, quantity)
     VALUES (?, ?, ?)
     ON CONFLICT(customer_id, date) DO UPDATE SET
       quantity = excluded.quantity;
   `;
 
   try {
-    const insert = await db.prepare(query);
+    const upsert = await db.prepare(upsertQuery);
 
     for (let entry of entries) {
-      await insert.run(entry.customer_id, entry.date, entry.quantity);
+      await upsert.run(entry.customer_id, entry.date, entry.quantity);
     }
 
-    await insert.finalize();
+    await upsert.finalize();
     res.send("Milk entries saved successfully");
     
   } catch (error) {
@@ -171,4 +172,27 @@ app.put("/milk-entries", async (req, res) => {
     res.status(500).send("Error saving entries");
   }
 });
+
+app.get("/quantity/", async (req, res) => {
+  const { date } = req.query;
+
+  if (!date) {
+    return res.status(400).send("Date is required");
+  }
+
+  const query = `
+    SELECT customer_id, quantity 
+    FROM quantity 
+    WHERE date = ?;
+  `;
+
+  try {
+    const rows = await db.all(query, [date]);
+    res.send(rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error fetching quantities");
+  }
+});
+
 

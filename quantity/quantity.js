@@ -1,233 +1,237 @@
-let servingDate=document.getElementById("servingDate")
-let quantityContainer=document.getElementById("quantityContainer");
-const saveBtn=document.getElementById("saveBtn");
-const submitBtn=document.getElementById("submitBtn");
-let submissionMsg=document.getElementById("submissionMsg");
-let submissionErrMsg=document.getElementById("submissionErrMsg");
-let dateErrMsg=document.getElementById("dateErrMsg");
-let group1=document.getElementById("group1");
-let selectCustomersBody=document.getElementById("selectCustomersBody");
-const modal = document.getElementById("selectCustomersModal");
+// ======================
+// GLOBAL DOM ELEMENTS
+// ======================
+const servingDate = document.getElementById("servingDate");
+const quantityContainer = document.getElementById("quantityContainer");
+const saveBtn = document.getElementById("saveBtn");
+const submitBtn = document.getElementById("submitBtn");
+const submissionMsg = document.getElementById("submissionMsg");
+const submissionErrMsg = document.getElementById("submissionErrMsg");
+const dateErrMsg = document.getElementById("dateErrMsg");
 const leftPage = document.getElementById("leftPage");
 const rightPage = document.getElementById("rightPage");
 const firstPage = document.getElementById("firstPage");
 const lastPage = document.getElementById("lastPage");
 const recordInfo = document.getElementById("recordInfo");
-let quantityValues=[];
-let userSelectedDate=null;
 
+
+// ======================
+// STATE VARIABLES
+// ======================
+let quantityValues = [];
+let allCustomers = [];
 let currentPage = 1;
 let pageLimit = 30;
 let totalRecords = 0;
 let totalPages = 1;
 
 
+// ======================
+// API URLs
+// ======================
+const API_URL = "http://localhost:3000/customers/";
+const API_URL_2 = "http://localhost:3000/quantity/";
 
 
+// ======================
+// GENERIC API FUNCTION
+// ======================
+async function api(url, method = "GET", body = null) {
+  const options = { method, headers: { "Content-Type": "application/json" } };
+  if (body) options.body = JSON.stringify(body);
 
-const API_URL = "http://localhost:3000/quantity/";
-
-async function fetchCustomers() {
-  try {
-    const response = await fetch(API_URL);
-    allCustomers = await response.json();
-    renderCustomers(allCustomers);
-  } catch (error) {
-    console.error("Error fetching customers:", error);
-  }
+  const response = await fetch(url, options);
+  return response.json().catch(() => response.text());
 }
 
-async function fetchSelectCustomers() {
-  try {
-    const response = await fetch(API_URL);
-    allCustomers = await response.json();
-    renderSelectCustomers(allCustomers);
-  } catch (error) {
-    console.error("Error fetching customers:", error);
-  }
+
+// ======================
+// LOAD CUSTOMERS (WITH PAGINATION)
+// ======================
+async function loadCustomers(page = currentPage) {
+  currentPage = page;
+
+  const count = await api(`${API_URL}count/`);
+  totalRecords = count.total;
+  totalPages = Math.ceil(totalRecords / pageLimit);
+
+  allCustomers = await api(`${API_URL}?page=${currentPage}&limit=${pageLimit}`);
+
+  renderCustomers();
+  updatePaginationUI();
+  updateRecordInfo();
 }
 
-function renderCustomers(customersList) {
+
+// ======================
+// RENDER CUSTOMERS (ROWS)
+// ======================
+function renderCustomers() {
   quantityContainer.innerHTML = "";
-  customersList.forEach((customer, index) => {
-    quantityContainer.appendChild(createCustomerRow(customer, index));
-  });
-}
 
-function renderSelectCustomers(customersList) {
-  selectCustomersBody.innerHTML = "";
-  customersList.forEach((customer, index) => {
-    selectCustomersBody.appendChild(createSelectCustomerRow(customer, index));
+  const start = (currentPage - 1) * pageLimit;
+
+  allCustomers.forEach((customer, index) => {
+    quantityContainer.appendChild(createCustomerRow(customer, start + index));
   });
 }
 
 
+// ======================
+// CREATE CUSTOMER ROW
+// ======================
 function createCustomerRow(customer, index) {
   const row = document.createElement("tr");
-
-  row.setAttribute("data-id",customer.id)
-
-  // Serial Number
-  const serialCell = document.createElement("td");
-  serialCell.textContent = index + 1;
-  row.appendChild(serialCell);
-
-  // Customer Details
-  const fields = ["name","address","quantity"];
-  fields.forEach((key) => {
-    const cell = document.createElement("td");
-    cell.textContent = customer[key] || "";
-    row.appendChild(cell);
-  });
-
-  let cells=row.querySelectorAll('td')
-  let quantityCell=cells[3]
-  
-  const quantityInput=document.createElement('input')
-  quantityCell.appendChild(quantityInput)
-  
-
-  quantityInput.addEventListener('keydown',(event)=>{
-    if ((event.key>='0' && event.key<='9' 
-    && quantityInput.value.length<3 )||
-    event.key === 'Backspace' ||
-    event.key === 'Delete' ||
-    event.key === 'ArrowLeft' ||
-    event.key === 'ArrowRight' ||
-    event.key === 'Tab'){
-      return
-    }else {
-    event.preventDefault(); // block all others
-    }
-  })
-
-  return row;
-}
-
-
-function createSelectCustomerRow(customer, index) {
-  const row = document.createElement("tr");
-
-  row.setAttribute("data-id",customer.id)
-
-  checkboxContainer=document.createElement('td')
-  const checkbox=document.createElement('input')
-  checkboxContainer.appendChild(checkbox)
-  checkbox.type="checkbox"
-  checkbox.id=customer.id
-  row.appendChild(checkboxContainer)
+  row.setAttribute("data-id", customer.id);
 
   // Serial Number
   const serialCell = document.createElement("td");
   serialCell.textContent = index + 1;
   row.appendChild(serialCell);
 
-  // Customer Details
-  const fields = ["name","address"];
-  fields.forEach((key) => {
-    const cell = document.createElement("td");
-    cell.textContent = customer[key] || "";
-    row.appendChild(cell);
+  // Name
+  const nameCell = document.createElement("td");
+  nameCell.textContent = customer.name;
+  row.appendChild(nameCell);
+
+  // Address
+  const addressCell = document.createElement("td");
+  addressCell.textContent = customer.address;
+  row.appendChild(addressCell);
+
+  // Quantity Input Column
+  const quantityCell = document.createElement("td");
+  const input = document.createElement("input");
+  input.type = "text";
+
+  // Input validation
+  input.addEventListener("keydown", (event) => {
+    if (
+      (event.key >= "0" && event.key <= "9" && input.value.length < 3) ||
+      ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(event.key)
+    ) {
+      return;
+    }
+    event.preventDefault();
   });
 
-  let cells=row.querySelector('td')
-  let checkboxCell=cells[0]
+  quantityCell.appendChild(input);
+  row.appendChild(quantityCell);
 
   return row;
 }
 
-function validateFields(){
-  let allValuesfilled=false;
-  const dateValidation=servingDate.value!=="";
-  let allRows=quantityContainer.querySelectorAll('tr');
-  for (row of allRows){
-    let customerQuantity=row.querySelector('input').value
-    if (customerQuantity.trim()===""){
-      allValuesfilled=false
-      break
-    }else{
-      allValuesfilled=true
-    }
-  }
-  if (dateValidation===false){
-    dateErrMsg.textContent="Please fill the date"
-  }else{
-    dateErrMsg.textContent=""
-  }
 
-  if (allValuesfilled===false){
-    submissionErrMsg.textContent="Please fill quantity!"
-  }else{
-    submissionErrMsg.textContent=""
-  }
-
-  return allValuesfilled && dateValidation
+// Helper to create a cell
+function createCell(value) {
+  const cell = document.createElement("td");
+  cell.textContent = value;
+  return cell;
 }
 
-async function addQuantityValues(){
-  try{
-    const options={
-    method:'POST',
-    headers:{
-      "Content-Type":"application/json",
-      "Accept":"application/json"
-    },
-    body:JSON.stringify(quantityValues)
-    }
-    const response=await fetch(API_URL,options);
-    if (response.ok){
-      submissionErrMsg.textContent="Quantities Submitted"
-    }else{
-      alert("Error caused while submitting")
 
+// ======================
+// VALIDATION FUNCTIONS
+// ======================
+function validateFields() {
+  const dateValid = servingDate.value !== "";
+  const rows = quantityContainer.querySelectorAll("tr");
+
+  let allFilled = [...rows].every(row => row.querySelector("input").value.trim() !== "");
+
+  dateErrMsg.textContent = dateValid ? "" : "Please fill the date";
+  submissionErrMsg.textContent = allFilled ? "" : "Please fill quantity!";
+
+  return allFilled && dateValid;
+}
+
+function validateNumberInput(event) {
+  const allowed =
+    (event.key >= "0" && event.key <= "9") ||
+    ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(event.key);
+
+  if (!allowed) event.preventDefault();
+}
+
+
+// ======================
+// SAVE QUANTITIES (PUT)
+// ======================
+async function addQuantityValues() {
+  try {
+    const response = await fetch(API_URL_2, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(quantityValues)
+    });
+
+    if (response.ok) {
+      submissionErrMsg.textContent = "Quantities Submitted";
+    } else {
+      alert("Error caused while submitting");
     }
-  }catch(error){
-    console.log(error)    
+  } catch (error) {
+    console.log(error);
   }
 }
 
-submitBtn.addEventListener("click",async(event)=>{
+
+// ======================
+// COLLECT & SUBMIT DATA
+// ======================
+submitBtn.addEventListener("click", async (event) => {
   event.preventDefault();
-  if (validateFields()){
-    userSelectedDate=servingDate.value
-    let allRows=quantityContainer.querySelectorAll('tr');
-    allRows.forEach((row)=>{
-      let customerQuantity=row.querySelector('input').value
-      let eachCustomer={
-        date:userSelectedDate.toString(),
-        id:Number(row.dataset.id),
-        quantity:Number(customerQuantity.trim())
-      }
-      quantityValues.push(eachCustomer)
-    })
-    await addQuantityValues()
-  };
-})
 
+  if (!validateFields()) return;
 
+  quantityValues = [];
+  const date = servingDate.value;
+  const rows = quantityContainer.querySelectorAll("tr");
 
-group1.addEventListener("click", () => {
-    modal.style.display = "flex";   // show modal
-    fetchSelectCustomers();
-});
+  rows.forEach(row => {
+    const inputValue = row.querySelector("input").value.trim();
+    quantityValues.push({
+      customer_id: Number(row.dataset.id),
+      date,
+      quantity: Number(inputValue)
+    });
+  });
 
-// Close modal when clicking outside the box
-modal.addEventListener("click", (e) => {
-    if (e.target === modal) modal.style.display = "none";
+  await addQuantityValues();
 });
 
 
+// ======================
+// AUTO-FILL QUANTITIES
+// ======================
+async function fetchQuantities(date) {
+  const response = await fetch(`${API_URL_2}?date=${date}`);
+  return response.json();
+}
+
+async function autoFillQuantities(date) {
+  const saved = await fetchQuantities(date);
+
+  const quantityMap = {};
+  saved.forEach(item => quantityMap[item.customer_id] = item.quantity);
+
+  const rows = document.querySelectorAll("#quantityContainer tr");
+
+  rows.forEach(row => {
+    const input = row.querySelector("input");
+    const id = Number(row.dataset.id);
+
+    input.value = quantityMap[id] ?? "";
+  });
+}
+
+servingDate.addEventListener("change", () => {
+  autoFillQuantities(servingDate.value);
+});
 
 
 // ======================
-// INITIAL LOAD
-// ======================
-fetchCustomers();
-
-
-
-// ======================
-// Pagination
+// PAGINATION UI
 // ======================
 function updatePaginationUI() {
   document.querySelector(".page-info").textContent = `Page ${currentPage} of ${totalPages}`;
@@ -247,3 +251,7 @@ firstPage.onclick = () => loadCustomers(1);
 lastPage.onclick = () => loadCustomers(totalPages);
 
 
+// ======================
+// INITIAL LOAD
+// ======================
+loadCustomers(currentPage);
