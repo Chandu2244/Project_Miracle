@@ -8,7 +8,6 @@ app.use(cors())
 const {open}=require('sqlite')
 const sqlite3=require('sqlite3')
 const path=require('path')
-const { off } = require('process')
 const dbPath=path.join(__dirname,'customersDB.db')
 
 let db=null
@@ -98,16 +97,6 @@ app.get('/customers/',async(request,response)=>{
     response.send(customersObject)
 })
 
-
-
-// //GET quantity API - wrong
-// app.get('/quantity/',async(request,response)=>{
-//     const getCustomersQuery=`SELECT id,name,address from customers`
-//     const responseObject=await db.all(getCustomersQuery)
-//     response.send(responseObject)
-// })
-
-
 //UPDATE Customers
 app.put('/customers/:customerId/',async(request,response)=>{
     const {customerId}=request.params
@@ -147,6 +136,7 @@ app.post("/customers/delete/", async (req, res) => {
 });
 
 
+//ADD or UPDATE quantity entries API
 app.put("/quantity/", async (req, res) => {
   const entries = req.body; // array of 30 entries
 
@@ -173,6 +163,8 @@ app.put("/quantity/", async (req, res) => {
   }
 });
 
+
+//GET quantity API
 app.get("/quantity/", async (req, res) => {
   const { date } = req.query;
 
@@ -194,6 +186,7 @@ app.get("/quantity/", async (req, res) => {
     res.status(500).send("Error fetching quantities");
   }
 });
+
 
 //GET customer bill API
 app.get("/billing/", async (req, res) => {

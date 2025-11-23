@@ -40,13 +40,13 @@ eachSection.forEach(section=>{
         currentCSS.href=cssPath
         document.head.appendChild(currentCSS);
 
-        currentJS=document.createElement('script');
-        currentJS.src=jsPath;
+        currentJS = document.createElement("script");
+        currentJS.src = jsPath + "?v=" + Date.now();  // <--- force new load
         document.body.appendChild(currentJS);
+
     })
 })
 
 
-billingSidebar.click();
 
 
