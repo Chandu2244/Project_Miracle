@@ -41,12 +41,16 @@ eachSection.forEach(section=>{
         document.head.appendChild(currentCSS);
 
         currentJS = document.createElement("script");
-        currentJS.src = jsPath + "?v=" + Date.now();  // <--- force new load
+        currentJS.src = jsPath + "?v=" + Date.now();
+        currentJS.onload = () => {
+            // call initialization if module exposes it
+            // try common names:
+            if (typeof window.initQuantityModule === "function") window.initQuantityModule();
+            if (typeof window.initCustomerModule === "function") window.initCustomerModule();
+            if (typeof window.initBillingModule === "function") window.initBillingModule();
+        };
         document.body.appendChild(currentJS);
-
     })
 })
-
-
 
 
