@@ -36,7 +36,7 @@
     // ======================
     // STATE
     // ======================
-    const API_URL = "http://localhost:3000/customers/";
+    const API_URL = "https://milk-billing-backend.onrender.com/customers/";
     let formData = { gender: "" };
     let allCustomers = [];
     let currentPage = 1;

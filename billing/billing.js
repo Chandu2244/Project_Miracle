@@ -9,6 +9,9 @@
     const tableBody = document.getElementById("billTableBody");
     const billTotals = document.getElementById("billTotals");
 
+    //API
+    const API_URL="https://milk-billing-backend.onrender.com/"
+
     if (!generateBillBtn) {
       console.warn("generateBillBtn not found. initBillingModule aborted.");
       return;
@@ -31,7 +34,7 @@
       try {
         if (!dropdown) return;
 
-        const customers = await api("http://localhost:3000/customers/?page=1&limit=60");
+        const customers = await api(`${API_URL}customers/?page=1&limit=200`);
         dropdown.innerHTML = `<option value="">-- Select Customer --</option>`;
 
         (customers || []).forEach(customer => {
@@ -84,7 +87,7 @@
       }
 
       const billData = await api(
-        `http://localhost:3000/billing/?customer_id=${customerId}&month=${month}&cost=${cost}`
+        `${API_URL}billing/?customer_id=${customerId}&month=${month}&cost=${cost}`
       );
 
       renderBillTable(billData);
