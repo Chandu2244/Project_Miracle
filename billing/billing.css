@@ -1,7 +1,7 @@
 .whole-container {
     display: flex;
     justify-content:center;
-    align-items: center;        /* full screen height */
+    align-items: center;        
     width: 100%;
     padding-top:10px;
     padding-bottom:10px;
@@ -15,7 +15,7 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* Row = label (left) + input (right) */
+
 .billing-container .row {
     display: flex;
     justify-content: space-between;
@@ -23,16 +23,16 @@
     width: 100%;
 }
 
-/* Label on left */
+
 .billing-container label {
     font-weight: bold;
-    width: 40%;  /* left label space */
+    width: 40%;  
 }
 
-/* Input / select on right */
+
 .billing-container input,
 .billing-container select {
-    width: 55%;  /* right input space */
+    width: 55%;  
     padding: 6px;
     border-radius: 5px;
     border: 1px solid #ccc;
@@ -40,8 +40,8 @@
 
 .billing-container button {
     display: block;
-    margin: 20px auto 0 auto; /* top auto bottom auto */
-    width: 150px;             /* optional */
+    margin: 20px auto 0 auto; 
+    width: 150px;             
 }
 
 .table th,

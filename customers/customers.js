@@ -1,6 +1,3 @@
-// ======================
-// CUSTOMER MODULE (SAFE FOR DYNAMIC LOADING)
-// ======================
 (function () {
 
   async function initCustomerModule() {
@@ -291,7 +288,7 @@
     await loadCustomers();
   }
 
-  // Expose to global
+  // Exposes to global
   window.initCustomerModule = initCustomerModule;
 
 })();

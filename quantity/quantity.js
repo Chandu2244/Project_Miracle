@@ -1,5 +1,3 @@
-// quantity.js - rewritten to initialize only when called
-
 (function () {
   // Expose the init function to window
   async function initQuantityModule() {
@@ -314,6 +312,6 @@
     await loadCustomers(currentPage);
   }
 
-  // Attach to window so index.js can call it after injecting HTML
+  // Attached to window so index.js can call it after injecting HTML
   window.initQuantityModule = initQuantityModule;
 })();

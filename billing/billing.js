@@ -1,5 +1,3 @@
-// billing.js - rewritten to initialize only when called
-
 (function () {
   async function initBillingModule() {
     // DOM
@@ -28,7 +26,7 @@
       return response.json().catch(() => response.text());
     }
 
-    // Populate customers if dropdown exists
+    // Populates customers if dropdown exists
     async function populateCustomerDropdown() {
       try {
         if (!dropdown) return;
@@ -74,7 +72,7 @@
       `;
     }
 
-    // Bind handler (safe to bind each init since elements are new)
+    
     generateBillBtn.addEventListener("click", async () => {
       const customerId = selectCustomer ? selectCustomer.value : "";
       const month = selectMonth ? selectMonth.value : "";
