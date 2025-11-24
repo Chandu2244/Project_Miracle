@@ -22,7 +22,7 @@ A simple and efficient full-stack application to manage **customers**, **daily m
 * Simple UI designed for real vendor use
 
 ## ▶️ Live Demo
-
+https://chandu2244.github.io/Project_Miracle/
 (Frontend on GitHub Pages + Backend on Render)
 **Note:** The Render backend runs on a free instance, so **the first request may take ~50 seconds** as the server wakes up. After that, it works normally.
 
