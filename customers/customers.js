@@ -127,7 +127,7 @@
 
       setTimeout(() => {
       serverResponse.textContent = "";
-      }, 4000);
+      }, 3000);
 
       addCustomerForm.reset();
       formData = { gender: "" };

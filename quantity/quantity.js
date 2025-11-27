@@ -163,14 +163,19 @@
         });
 
         if (response.ok) {
-          if (submissionErrMsg) submissionErrMsg.textContent = "Quantities Submitted";
-        } else {
-          alert("Error caused while submitting");
+          submissionMsg.textContent = "Quantities Submitted";
+
+          setTimeout(() => {
+            submissionMsg.textContent = "";
+          }, 3000);
         }
-      } catch (error) {
-        console.log(error);
+        else {
+          alert("Error caused while submitting");
+          }
+        } catch (error) {
+          console.log(error);
+        }
       }
-    }
 
     // ======================
     // COLLECT & SUBMIT DATA
