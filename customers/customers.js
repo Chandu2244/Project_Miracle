@@ -56,7 +56,13 @@
       if (body) options.body = JSON.stringify(body);
 
       const response = await fetch(url, options);
-      return response.json().catch(() => response.text());
+      const text = await response.text();
+
+      try {
+        return JSON.parse(text);   // try to parse JSON
+      } catch {
+        return text;               // if not JSON, just return text
+      }
     }
 
 
