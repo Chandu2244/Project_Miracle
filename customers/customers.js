@@ -123,6 +123,11 @@
 
       const message = await api(API_URL, "POST", formData);
       serverResponse.textContent = message;
+      serverResponse.style.textAlign = "center";
+
+      setTimeout(() => {
+      serverResponse.textContent = "";
+      }, 4000);
 
       addCustomerForm.reset();
       formData = { gender: "" };
@@ -155,6 +160,9 @@
     async function deleteCustomers(ids) {
       await api(`${API_URL}delete/`, "POST", { ids });
       await loadCustomers();
+
+      selectAllCheckbox.checked = false;
+      toggleDeleteIcon();
     }
 
 
