@@ -5,51 +5,69 @@ let deliverySheetSidebar=document.getElementById("deliverySheetSidebar");
 let billingSidebar=document.getElementById("billingSidebar");
 
 
-const eachSection=document.querySelectorAll('.side-bar-each-feature');
-const mainContent=document.getElementById("dashboardBody");
+const eachSection = document.querySelectorAll('.side-bar-each-feature');
+const mainContent = document.getElementById("dashboardBody");
 
 let currentCSS = null;
-let currentJS= null;
+let currentJS = null;
 
-eachSection.forEach(section=>{
-    section.addEventListener('click',async ()=> {
-        const htmlPath=section.dataset.html;
-        const cssPath=section.dataset.css;
-        const jsPath=section.dataset.js;
+// Clear localStorage on a fresh site visit (first load)
+if (!document.referrer) {
+    localStorage.clear();
+}
 
-        eachSection.forEach(section=>{
-            section.classList.remove("select-item");
-        })
+
+// Function to load a section (can be reused)
+async function loadSection(section) {
+    const htmlPath = section.dataset.html;
+    const cssPath = section.dataset.css;
+    const jsPath = section.dataset.js;
+
+    // Remove existing CSS & JS
+    if (currentCSS) currentCSS.remove();
+    if (currentJS) currentJS.remove();
+
+    // Load HTML
+    const res = await fetch(htmlPath);
+    const html = await res.text();
+    mainContent.innerHTML = html;
+
+    // Load CSS
+    currentCSS = document.createElement('link');
+    currentCSS.rel = 'stylesheet';
+    currentCSS.href = cssPath;
+    document.head.appendChild(currentCSS);
+
+    // Load JS
+    currentJS = document.createElement("script");
+    currentJS.src = jsPath + "?v=" + Date.now();
+    currentJS.onload = () => {
+        if (typeof window.initQuantityModule === "function") window.initQuantityModule();
+        if (typeof window.initCustomerModule === "function") window.initCustomerModule();
+        if (typeof window.initBillingModule === "function") window.initBillingModule();
+    };
+    document.body.appendChild(currentJS);
+}
+
+// Sidebar click listener
+eachSection.forEach(section => {
+    section.addEventListener('click', async () => {
+        eachSection.forEach(s => s.classList.remove("select-item"));
         section.classList.add("select-item");
 
-        if (currentCSS){
-            currentCSS.remove()
-            currentCSS=null;
-        }
-        if (currentJS){
-            currentJS.remove();
-            currentJS=null;
-        }
+        // Save active section
+        localStorage.setItem("activeSection", section.id);
 
-        const res= await fetch(htmlPath);
-        const html=await res.text();
-        mainContent.innerHTML=html;
+        await loadSection(section);
+    });
+});
 
-        currentCSS= document.createElement('link');
-        currentCSS.rel='stylesheet';
-        currentCSS.href=cssPath
-        document.head.appendChild(currentCSS);
-
-        currentJS = document.createElement("script");
-        currentJS.src = jsPath + "?v=" + Date.now();
-        currentJS.onload = () => {
-            // calls initialization if module exposes it
-            if (typeof window.initQuantityModule === "function") window.initQuantityModule();
-            if (typeof window.initCustomerModule === "function") window.initCustomerModule();
-            if (typeof window.initBillingModule === "function") window.initBillingModule();
-        };
-        document.body.appendChild(currentJS);
-    })
-})
-
-
+// Restore highlight + reload section if needed
+window.addEventListener("DOMContentLoaded", () => {
+    const active = localStorage.getItem("activeSection");
+    if (active) {
+        const section = document.getElementById(active);
+        section.classList.add("select-item");
+        loadSection(section); // Reload same section UI
+    }
+});
