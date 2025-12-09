@@ -36,8 +36,8 @@
     // ======================
     // API URLs
     // ======================
-    const API_URL = "http://13.201.100.90:3000/customers/";
-    const API_URL_2 = "http://13.201.100.90:3000/quantity/";
+    const API_URL = "https://milk-billing-backend.onrender.com/customers/";
+    const API_URL_2 = "https://milk-billing-backend.onrender.com/quantity/";
 
 
     // ======================
