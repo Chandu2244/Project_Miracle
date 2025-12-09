@@ -10,7 +10,7 @@
     const billTotals = document.getElementById("billTotals");
 
     //API
-    const API_URL="https://milk-billing-backend.onrender.com"
+    const API_URL="https://milk-billing-backend.onrender.com/"
 
     if (!generateBillBtn) {
       console.warn("generateBillBtn not found. initBillingModule aborted.");
